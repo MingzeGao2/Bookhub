@@ -12,7 +12,7 @@ class User(models.Model):
 
 class Book(models.Model):
     def __str__(self):
-        return self.ISBN
+        return self.title 
     ISBN = models.CharField(max_length=50)
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=200)
@@ -20,7 +20,7 @@ class Book(models.Model):
 
 class Need(models.Model):
     def __str__(self):
-        return self.user + ' '+self.intention+' '+ self.book
+        return self.user.__str__() + ' '+self.intention+' '+ self.book.title
     intention = models.CharField(max_length=200)
     user = models.ForeignKey(User)
     book = models.ForeignKey(Book)
@@ -33,13 +33,13 @@ class Course(models.Model):
     
 class Require(models.Model):
     def __str__(self):
-        return self.course + ' requires ' + self.required_book
+        return self.course.__str__() + ' requires ' + self.required_book.__str__()
     course = models.ForeignKey(Course)
     required_book = models.ForeignKey(Book)
 
 class Registration(models.Model):
     def __str__(self):
-        return self.student + ' register ' + self.to_course
+        return self.student.__str__() + ' register ' + self.to_course.__str__()
     student = models.ForeignKey(User)
     to_course = models.ForeignKey(Course)
 

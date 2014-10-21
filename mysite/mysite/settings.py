@@ -38,7 +38,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'book',
 )
-
+##TEMPLATE_DIRS = (
+  ##  '~/Bookhub/mysite/book/templates',
+##)
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
