@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+  </head>
+  <body>
+    <form action="insertbook/" method="post">
+      {% csrf_token %}
+      <label for="isbn">ISBN:&nbsp&nbsp&nbsp&nbsp&nbsp</label>
+      <input id="isbn" type="text" name="isbn" value=""><br />
+      <label for="title">Title:&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
+      <input id="title" type="text" name="title" value=""><br />
+      <label for="category">Category:</label>
+      <input id="category" type="text" name="category" value=""><br />
+      <label for="amount">Amount:&nbsp&nbsp</label>
+      <input id="amount" type="text" name="amount" value=""><br />
+      <input type="submit" value="OK">
+    </form>
+  </body>
+</html>

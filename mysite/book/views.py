@@ -3,7 +3,9 @@ from django.http import HttpResponse
 from book.models import Need, Book
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext, loader
-def need (request, ISBN):
+def needbook (request):
+    if request.method == 'POST':
+        ISBN = request.POST.get("isbn",' ')    
     try:
         book = Book.objects.get(ISBN=ISBN)
         result = Need.objects.filter(book=book,intention = "have")
@@ -14,13 +16,17 @@ def need (request, ISBN):
         return HttpResponse(output)
      
 
-def have (request, ISBN):
+def havebook (request):
+    if request.method == 'POST':
+        ISBN = request.POST.get("isbn", ' ')
     try:
         book = Book.objects.get(ISBN=ISBN)
         book.amount +=1
         book.save()
         result = Need.objects.filter(book=book, intention = "need")
         output = ', '.join([p.user.__str__() for p in result])
+        if output == '':
+            return HttpResponse("Sorry, no one is looking for %s" %book.title)
         output += ' need %s' %(book.title)
         output += '......now we have %s %s' %(book.amount, book.title)
     except ObjectDoesNotExist:
@@ -28,7 +34,9 @@ def have (request, ISBN):
     else:
         return HttpResponse(output)
         
-def delete(request, ISBN):
+def deletebook(request):
+    if request.method == 'POST':
+        ISBN = request.POST.get("isbn",' ')    
     try:
         book = Book.objects.get(ISBN=ISBN)
         title = book.title
@@ -38,9 +46,19 @@ def delete(request, ISBN):
         return HttpResponse("Sorry, we don't have this book")
     else:
         return HttpResponse(output)
-    
+        
+def delete(request):
+    template = loader.get_template('book/deletebook.html')
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
 
-def insertbook(request, ISBN, Category, Amount, Title):
+
+def insertbook(request):
+    if request.method == "POST":
+        ISBN = request.POST.get("isbn", ' ')
+        Category = request.POST.get("category",' ')
+        Title = request.POST.get("title",' ')
+        Amount = request.POST.get("amount",' ')
     try:
         book = Book.objects.get(ISBN=ISBN)
     except ObjectDoesNotExist:
@@ -48,17 +66,29 @@ def insertbook(request, ISBN, Category, Amount, Title):
             newbook= Book.objects.create(ISBN=ISBN, category=Category, amount=Amount, title=Title)
             newbook.save()
         except :
-            return HttpResponse("%s can't be added to books." %Title)
+            return HttpResponse("%s can't be added to books. " %Title)
         else:
-            return HttpResponse("Added %s to database." %Title)
+            return HttpResponse("Added %s to database. " %Title)
     else:
         return HttpResponse("%s is already in database." %Title)
         
-##def Register(request):
-##    if request.method == "POST":
-##        ISBN = request.POST.get("isbn", '')
-##    return HttpResponse("%s" ISBN)
-##        
+
+def insert(request):
+    template = loader.get_template('book/insertbook.html')
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
+    
+def need(request):
+    template = loader.get_template('book/needbook.html')
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
+
+def have(request):
+    template = loader.get_template('book/havebook.html')
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
+
 def index(request):
     template = loader.get_template('book/index.html')
-    return HttpResponse(template)
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
