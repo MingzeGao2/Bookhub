@@ -3,13 +3,18 @@ from django.http import HttpResponse
 from book.models import Need, Book
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext, loader
+from django.db import connection
 def needbook (request):
+    ISBN = ''
     if request.method == 'POST':
         ISBN = request.POST.get("isbn",' ')    
     try:
-        book = Book.objects.get(ISBN=ISBN)
-        result = Need.objects.filter(book=book,intention = "have")
-        output = ', '.join([p.__str__() for p in result])
+        global ISBN
+        output = []
+        neededBood = Book.objects.raw('SELECT * FROM book_book WHERE ISBN = %s',[ISBN])[0]
+        for p in Need.objects.filter(book=neededBood,intention='need'):
+            output.append(p.__str__() + ', ')
+        output[-1] = output[-1][0:-1]
     except ObjectDoesNotExist:
         return HttpResponse("Sorry, we don't have this book")
     else:
@@ -20,9 +25,13 @@ def havebook (request):
     if request.method == 'POST':
         ISBN = request.POST.get("isbn", ' ')
     try:
-        book = Book.objects.get(ISBN=ISBN)
-        book.amount +=1
-        book.save()
+        book = Book.objects.raw('SELECT * FROM book_book WHERE ISBN = %s',[ISBN])[0]
+        bookid = book.id
+        cursor = connection.cursor()
+        cursor.execute('SELECT amount FROM book_book WHERE id = %s',[bookid])
+        amount = cursor.fetchone()
+        amount = amount[0] + 1
+        cursor.execute('UPDATE book_book SET amount = %s WHERE id = %s',[amount,bookid])
         result = Need.objects.filter(book=book, intention = "need")
         output = ', '.join([p.user.__str__() for p in result])
         if output == '':
@@ -38,9 +47,11 @@ def deletebook(request):
     if request.method == 'POST':
         ISBN = request.POST.get("isbn",' ')    
     try:
-        book = Book.objects.get(ISBN=ISBN)
+        book= Book.objects.raw('SELECT * FROM book_book WHERE ISBN = %s',[ISBN])[0]
+        bookid = book.id
         title = book.title
-        book.delete()
+        cursor = connection.cursor()
+        cursor.execute('DELETE  FROM book_book WHERE id = %s',[bookid])
         output = "%s has been deleted."%(title)
     except ObjectDoesNotExist:
         return HttpResponse("Sorry, we don't have this book")
@@ -63,8 +74,8 @@ def insertbook(request):
         book = Book.objects.get(ISBN=ISBN)
     except ObjectDoesNotExist:
         try:
-            newbook= Book.objects.create(ISBN=ISBN, category=Category, amount=Amount, title=Title)
-            newbook.save()
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
         except :
             return HttpResponse("%s can't be added to books. " %Title)
         else:
@@ -92,3 +103,4 @@ def index(request):
     template = loader.get_template('book/index.html')
     context = RequestContext(request)
     return HttpResponse(template.render(context))
+
