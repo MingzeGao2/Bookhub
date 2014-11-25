@@ -11,5 +11,6 @@ urlpatterns = patterns('',
                        url(r'^delete/deletebook/$',views.deletebook, name='deletebook'),
                        url(r'^need/needbook/$', views.needbook, name='needbook'),
                        url(r'^have/havebook/$', views.havebook, name='havebook'),
+                       url(r'^register/$',views.register,name='register'),
                        url(r'^$', views.index, name='index'),
 )

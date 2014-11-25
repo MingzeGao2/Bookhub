@@ -1,9 +1,11 @@
 from django.shortcuts import render_to_response , render
 from django.http import HttpResponse
-from book.models import Need, Book
+from book.models import Need, Book, User
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext, loader
 from django.db import connection
+
+userid = 0;
 def needbook (request):
     ISBN = ''
     if request.method == 'POST':
@@ -70,18 +72,18 @@ def insertbook(request):
         Category = request.POST.get("category",' ')
         Title = request.POST.get("title",' ')
         Amount = request.POST.get("amount",' ')
-    try:
-        book = Book.objects.get(ISBN=ISBN)
-    except ObjectDoesNotExist:
         try:
-            cursor = connection.cursor()
-            cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
-        except :
-            return HttpResponse("%s can't be added to books. " %Title)
+            book = Book.objects.get(ISBN=ISBN)
+        except ObjectDoesNotExist:
+            try:
+                cursor = connection.cursor()
+                cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
+            except :
+                return HttpResponse("%s can't be added to books. " %Title)
+            else:
+                return HttpResponse("Added %s to database. " %Title)
         else:
-            return HttpResponse("Added %s to database. " %Title)
-    else:
-        return HttpResponse("%s is already in database." %Title)
+            return HttpResponse("%s is already in database." %Title)
         
 
 def insert(request):
@@ -104,3 +106,29 @@ def index(request):
     context = RequestContext(request)
     return HttpResponse(template.render(context))
 
+def register(request):
+    password = "1"
+    major = "1"
+    netid = "1"
+    username = "1"
+    if request.method == "POST":
+        password = request.POST.get("password", ' ')
+        major = request.POST.get("major",' ')
+        netid = request.POST.get("netid",' ')
+        username = request.POST.get("username",' ')
+        
+    try:
+        user_rv = User.objects.get(netid = netid)
+    except ObjectDoesNotExist:
+        try:
+            User.objects.create(password=password,major=major,User_name=username,netid=netid)
+        except:
+            return HttpResponse("not able to register")
+        else:
+            return HttpResponse("successfully registrated")
+    else:
+        return HttpResponse("you already have registrated")
+                
+def recommend(request):
+    
+            
