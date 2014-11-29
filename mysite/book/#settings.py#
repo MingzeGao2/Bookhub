@@ -6,7 +6,6 @@ PROJECT_PATH = os.path.realpath(os.path.dirname(__file__))
 
 print PROJECT_DIR
 print PROJECT_PATH
-
 MEDIA_ROOT = os.path.join(PROJECT_DIR, 'media')
 
 MEDIA_URL = '/media/'

@@ -11,7 +11,7 @@
 }
 
 .jumbotron {
-  background-image: url('elements/jumbotron.png');
+  background-image: url('/home/mingzegao/Bookhub/mysite/book/static/elements/jumbotron.png');
   height: 500px;
   background-repeat: no-repeat;
   background-size: cover;
@@ -24,7 +24,7 @@
 
 .jumbotron h1 {
   color: #fff;
-  font-size: 48px;  
+  font-size: 48px;
   font-family: 'Shift', sans-serif;
   font-weight: bold;
 }
@@ -66,10 +66,4 @@
 }
 .navbar{
     margin-bottom:0px;
-}
-
-#belownav{
-    width:auto;
-    padding:0px 0px 0px 0px;
-    margin:0px 0px 0px 0px;
 }

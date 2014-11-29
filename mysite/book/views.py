@@ -1,11 +1,10 @@
 from django.shortcuts import render_to_response , render
 from django.http import HttpResponse
-from book.models import Need, Book, User
+from book.models import Need, Book, User, Course, Require, Registration
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext, loader
 from django.db import connection
-
-userid = 0;
+userid = 1000000;
 def needbook (request):
     ISBN = ''
     if request.method == 'POST':
@@ -72,6 +71,7 @@ def insertbook(request):
         Category = request.POST.get("category",' ')
         Title = request.POST.get("title",' ')
         Amount = request.POST.get("amount",' ')
+        template = loader.get_template('book/response.html')
         try:
             book = Book.objects.get(ISBN=ISBN)
         except ObjectDoesNotExist:
@@ -79,12 +79,22 @@ def insertbook(request):
                 cursor = connection.cursor()
                 cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
             except :
-                return HttpResponse("%s can't be added to books. " %Title)
+                context = RequestContext(request,{
+                    'response' : "can't be added to books"
+                })
+                return HttpResponse(template.render(context))
+
             else:
-                return HttpResponse("Added %s to database. " %Title)
+                context = RequestContext(request,{
+                    'response' : "Added " + Title + "to database."
+                })
+                return HttpResponse(template.render(context))
         else:
-            return HttpResponse("%s is already in database." %Title)
-        
+            context = RequestContext(request,{
+                'response' : Title + " is already in database."
+            })
+            return HttpResponse(template.render(context))
+
 
 def insert(request):
     template = loader.get_template('book/insertbook.html')
@@ -101,10 +111,6 @@ def have(request):
     context = RequestContext(request)
     return HttpResponse(template.render(context))
 
-def index(request):
-    template = loader.get_template('book/index.html')
-    context = RequestContext(request)
-    return HttpResponse(template.render(context))
 
 def register(request):
     password = "1"
@@ -129,6 +135,123 @@ def register(request):
     else:
         return HttpResponse("you already have registrated")
                 
-def recommend(request):
     
-            
+def your_books(request):
+    book_list = []
+    user = User.objects.get(netid="mgao16")
+    userid = user.id
+    print userid
+    for entry in Need.objects.all():
+        ##print entry
+        if entry.user == user and entry.intention == "have":
+            print "h"
+            book_list.append(entry.book)
+            print entry
+    template = loader.get_template('book/your_books.html')
+    context = RequestContext(request,{
+        'book_list' : book_list
+    })
+    return HttpResponse(template.render(context))
+def your_account(request):
+    user = User.objects.get(netid="mgao16")
+    template = loader.get_template('book/your_account.html')
+    context = RequestContext(request,{
+        'info' : user
+    })
+    return HttpResponse(template.render(context))
+def your_wanted_list(request):
+    book_list = []
+    user = User.objects.get(netid="mgao16")
+    userid = user.id
+    print userid
+    for entry in Need.objects.all():
+        ##print entry
+        if entry.user == user and entry.intention == "need":
+            print "h"
+            book_list.append(entry.book)
+    template = loader.get_template('book/your_wanted_list.html')
+    context = RequestContext(request,{
+        'book_list' : book_list
+    })
+    return HttpResponse(template.render(context))
+def add_books(request):
+    return render(request,'book/add_books.html')
+def enlargeDatabase(request):
+    title=[]
+    isbn=[]
+    cat = "CHEM"
+    bookTitle =  open('book/chem.txt','r')
+    for line in bookTitle:
+        title.append(line)
+
+    bookISBN = open('book/chem.txt', 'r')
+    for line in bookISBN:
+        isbn.append(line)
+    for i in range(len(title)):
+        print isbn[i] + title[i]
+    for i in range(len(title)):
+        try:
+            book = Book.objects.create(ISBN=isbn[i],title=title[i],category=cat,amount=0)
+        except:
+            return HttpResponse("failed")
+        else:
+            print book
+    return HttpResponse("good")
+
+def user_rank():
+    book_list = []
+    rank = {}
+    the_one = User.objects.get(netid="mgao16")
+    for entry in Need.objects.all():
+        if entry.user== the_one:
+            book_list.append(entry.book)
+    for u in User.objects.all():
+        rank[u] = 0
+        for entry in Need.objects.all():
+            print entry.user != the_one and entry.user == u and entry.book in book_list
+            if entry.user != the_one and entry.user == u  and entry.book in book_list:
+                rank[u] +=1
+
+    sorted_rank = sorted(rank, key=rank.get)
+##    sorted_rank = sorted_rank.reverse()
+    print sorted_rank
+    print type(sorted_rank)
+    return sorted_rank
+        
+def recommended_to_you(request):
+    top_ten_user = user_rank()
+    return;
+def index(request):
+    if request.method == "POST":
+        username = request.POST.get("textinput-1",' ')
+        netid = request.POST.get("textinput-2",' ')
+        major = request.POST.get("textinput-3",' ')
+        password = request.POST.get("passwordinput-0",' ')
+        confrim = request.POST.get("passwordinput-1", ' ')
+        set1 = set(password.split(' '))
+        set2 = set(confrim.split(' '))
+        if set1 != set2:
+            return HttpResponse("please confrim your password")
+        try:
+            user = User.objects.get(netid = netid)
+        except ObjectDoesNotExist:
+            try:
+                User.objects.create(password=password,major=major,User_name=username,netid=netid)
+            except:
+                return HttpResponse("not able to register")
+            else:
+                template = loader.get_template('book/index.html')
+                context = RequestContext(request)
+                return HttpResponse(template.render(context))
+                print "good"
+        else:
+            return HttpResponse("you already have registrated")
+    template = loader.get_template('book/index.html')
+    context = RequestContext(request)
+    return HttpResponse(template.render(context))
+
+def login(request):
+    global userid
+     username = request.POST.get("textinput-1",' ')
+     password = request.POSt.get("passwordinput-1",' ')
+     
