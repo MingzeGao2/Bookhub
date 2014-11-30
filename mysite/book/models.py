@@ -17,7 +17,8 @@ class Book(models.Model):
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=200)
     amount = models.IntegerField(default=0)
-
+    def __unicode__(self):
+        return u'{c}/{l}/{p}'.format(c=self.title, l=self.category, p=self.amount)
 class Need(models.Model):
     def __str__(self):
         return self.user.__str__() + ' '+self.intention+' '+ self.book.title

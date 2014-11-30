@@ -262,9 +262,9 @@
 
                 <!-- Text input-->
                 <div class="control-group">
-                  <label class="control-label" for="textinput-4">Username</label>
+                  <label class="control-label" for="textinput-1">Username</label>
                   <div class="controls">
-                    <input id="textinput-4" name="textinput-4" type="text" placeholder="username" class="input-xlarge">
+                    <input id="textinput-1" name="textinput-1" type="text" placeholder="username" class="input-xlarge">
                   </div>
                 </div>
 
@@ -273,9 +273,9 @@
 
                 <!-- Password input-->
                 <div class="control-group">
-                  <label class="control-label" for="passwordinput-3">Password</label>
+                  <label class="control-label" for="passwordinput-0">Password</label>
                   <div class="controls">
-                    <input id="passwordinput-3" name="passwordinput-3" type="password" placeholder="password" class="input-xlarge">
+                    <input id="passwordinput-0" name="passwordinput-0" type="password" placeholder="password" class="input-xlarge">
                   </div>
                 </div>
 
