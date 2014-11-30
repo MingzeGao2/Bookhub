@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -6,15 +6,17 @@
     <title>Your Wanted List</title>
 </head>
 <body>
-  <p> Your Wanted List</p>
-{% if book_list %}
-   <ul>
-   {% for book in book_list %}
-   <li> {{book}}</li>
-   {% endfor %}
-   </ul>
-{% else %}
-   <p> No books are available. </p>
-{% endif %}
+    <p> Your Wanted List</p>
+    {% if book_list %}
+    <form method="post" action="delete_from_need/">
+      {% csrf_token %}
+        {% for book in book_list %}
+        <input type="checkbox" name="delete" value="{{book.ISBN}}" />{{book.title}} ......... ISBN:{{book.ISBN}} <br />
+        {% endfor %}
+        <input type="submit" value="delete" />
+    </form>
+    {% else %}
+    <p> You don't have any book registered yet </p>
+    {% endif %}
 </body>
 </html>

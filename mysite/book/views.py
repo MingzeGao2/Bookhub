@@ -6,45 +6,78 @@ from django.template import RequestContext, loader
 from django.db import connection
 from sets import Set
 userid = 1000000
+home = "http://127.0.0.1:8000/bookhub"
 def needbook (request):
-    ISBN = ''
+    global userid
     if request.method == 'POST':
-        ISBN = request.POST.get("isbn",' ')    
+        ISBN = request.POST.get("textinput-wantbook-isbn", ' ')
+        title = request.POST.get("textinput-wantbook-title",' ')
+        category = request.POST.get("textinput-wantbook-category",' ')
     try:
-        global ISBN
         output = []
-        neededBood = Book.objects.raw('SELECT * FROM book_book WHERE ISBN = %s',[ISBN])[0]
-        for p in Need.objects.filter(book=neededBood,intention='need'):
-            output.append(p.__str__() + ', ')
-        output[-1] = output[-1][0:-1]
+        neededBood = Book.objects.get(ISBN = ISBN)
+        try:
+            entry = Need.objects.get(book=neededBood, intention="need", user=userid)
+        except ObjectDoesNotExist:
+            Need.objects.create(book=neededBood, intention="need",user=userid)
+            return redirect("http://127.0.0.1:8000/bookhub")
+        else:
+            return redirect("http://127.0.0.1:8000/bookhub")
     except ObjectDoesNotExist:
         return HttpResponse("Sorry, we don't have this book")
     else:
-        return HttpResponse(output)
-     
-
-def havebook (request):
+        return redirect("http://127.0.0.1:8000/bookhub")
+    return redirect("http://127.0.0.1:8000/bookhub")
+def delete_from_need(request):
+    global userid
     if request.method == 'POST':
-        ISBN = request.POST.get("isbn", ' ')
+        book_list = request.POST.getlist(u'delete')
+        for b in book_list:
+            book = Book.objects.get(ISBN=b)
+            intention = Need.objects.get(book=book,intention="need",user=userid)
+            intention.delete()
+            intention.save()
+    return redirect(home)
+def delete_from_have(request):
+    global userid
+    if request.method == 'POST':
+        book_list = request.POST.getlist(u'delete')
+        for b in book_list:
+            book = Book.objects.get(ISBN=b)
+            intention = Need.objects.get(book=book,intention="have",user=userid)
+            intention.delete()
+            book.amount -=1
+            book.save()
+            intention.save()
+    return redirect("http://127.0.0.1:8000/bookhub")
+def havebook (request):
+    global userid
+    if request.method == 'POST':
+        ISBN = request.POST.get("textinput-addbook-isbn", ' ')
+        title = request.POST.get("textinput-addbook-title",' ')
+        category = request.POST.get("textinput-addbook-category",' ')
     try:
-        book = Book.objects.raw('SELECT * FROM book_book WHERE ISBN = %s',[ISBN])[0]
+        book = Book.objects.get(ISBN=ISBN)
+        print book
         bookid = book.id
         cursor = connection.cursor()
         cursor.execute('SELECT amount FROM book_book WHERE id = %s',[bookid])
         amount = cursor.fetchone()
         amount = amount[0] + 1
         cursor.execute('UPDATE book_book SET amount = %s WHERE id = %s',[amount,bookid])
-        result = Need.objects.filter(book=book, intention = "need")
-        output = ', '.join([p.user.__str__() for p in result])
-        if output == '':
-            return HttpResponse("Sorry, no one is looking for %s" %book.title)
-        output += ' need %s' %(book.title)
-        output += '......now we have %s %s' %(book.amount, book.title)
+        print book.amount
+        try:
+            Need.objects.get(intention="have", user = userid, book = book)
+        except:
+            Need.objects.create(intention= "have",user= userid,book = book)
+        else:
+            return redirect("http://127.0.0.1:8000/bookhub")
+        return redirect("http://127.0.0.1:8000/bookhub")
     except ObjectDoesNotExist:
-        return HttpResponse("Sorry, we don't have this book")
+        insertbook(ISBN, category, title, 1)
     else:
-        return HttpResponse(output)
-        
+        return redirect("http://127.0.0.1:8000/bookhub")        
+    return redirect("http://127.0.0.1:8000/bookhub")
 def deletebook(request):
     if request.method == 'POST':
         ISBN = request.POST.get("isbn",' ')    
@@ -67,35 +100,20 @@ def delete(request):
     return HttpResponse(template.render(context))
 
 
-def insertbook(request):
-    if request.method == "POST":
-        ISBN = request.POST.get("isbn", ' ')
-        Category = request.POST.get("category",' ')
-        Title = request.POST.get("title",' ')
-        Amount = request.POST.get("amount",' ')
-        template = loader.get_template('book/response.html')
-        try:
-            book = Book.objects.get(ISBN=ISBN)
-        except ObjectDoesNotExist:
-            try:
-                cursor = connection.cursor()
-                cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
-            except :
-                context = RequestContext(request,{
-                    'response' : "can't be added to books"
-                })
-                return HttpResponse(template.render(context))
-
-            else:
-                context = RequestContext(request,{
-                    'response' : "Added " + Title + "to database."
-                })
-                return HttpResponse(template.render(context))
-        else:
-            context = RequestContext(request,{
-                'response' : Title + " is already in database."
-            })
-            return HttpResponse(template.render(context))
+def insertbook(ISBN, Category, Title, Amount):
+    global home
+    try:
+        cursor = connection.cursor()
+        cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
+    except :
+        context = RequestContext(request,{
+            'response' : "can't be added to books"
+        })
+        return HttpResponse(template.render(context))        
+    else:
+        return redirect(home)
+    return redirect("http://127.0.0.1:8000/bookhub")
+    
 
 
 def insert(request):
@@ -140,13 +158,10 @@ def register(request):
     
 def your_books(request):
     book_list = []
-    user = User.objects.get(netid="mgao16")
-    userid = user.id
-    print userid
+    user = userid
     for entry in Need.objects.all():
         ##print entry
         if entry.user == user and entry.intention == "have":
-            print "h"
             book_list.append(entry.book)
             print entry
     template = loader.get_template('book/your_books.html')
@@ -155,17 +170,16 @@ def your_books(request):
     })
     return HttpResponse(template.render(context))
 def your_account(request):
-    user = User.objects.get(netid="mgao16")
+    user = userid
     template = loader.get_template('book/your_account.html')
     context = RequestContext(request,{
         'info' : user
     })
     return HttpResponse(template.render(context))
 def your_wanted_list(request):
+    global userid
     book_list = []
-    user = User.objects.get(netid="mgao16")
-    userid = user.id
-    print userid
+    user = userid
     for entry in Need.objects.all():
         ##print entry
         if entry.user == user and entry.intention == "need":
@@ -230,9 +244,13 @@ def recommended_to_you(request):
             if entry.user != the_user and entry.user == u  and entry.book not in book_list:
                 print entry.book
                 rec_books.append(entry.book)
+    template = loader.get_template('book/recommended_to_you.html')
+    context = RequestContext(request,{
+        'book_list' : rec_books
+    })
+    return HttpResponse(template.render(context))
     
     
-    return;
 def signup(request):
     if request.method == "POST":
         username = request.POST.get("textinput-signup-username",' ')

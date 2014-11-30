@@ -6,11 +6,11 @@
     <title>Recommended to you</title>
 </head>
 <body>
-  <p>Recommended to you</p>
+  <p> Recommended to you</p>
 {% if book_list %}
    <ul>
    {% for book in book_list %}
-   <li> {{book}}...{{book.ISBN}}</li>
+   <li> {{book}}</li>
    {% endfor %}
    </ul>
 {% else %}

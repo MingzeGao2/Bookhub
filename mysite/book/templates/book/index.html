@@ -1,5 +1,5 @@
-{% load static %}﻿
-﻿<!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html>
 <head>
     <title>BookHub</title>
@@ -82,18 +82,24 @@
 
                 ///////////////////////////////////
                 $("#your_account").click(function () {
-                    $("#belownav").load("your_account.html");
+                    $("#belownav").load("your_account");
                 });
                 $("#your_books").click(function () {
-                    $("#belownav").load("your_books.html");
+                    $("#belownav").load("your_books");
                 });
                 $("#your_wanted_list").click(function () {
-                    $("#belownav").load("your_wanted_list.html");
+                    $("#belownav").load("your_wanted_list");
                 });
                 $("#recommended_to_you").click(function () {
-                    $("#belownav").load("recommended_to_you.html");
+                    $("#belownav").load("recommended_to_you");
                 });
-
+                $("#search_submit").click(function () {
+                    $("#belownav").load("search.html");
+                });
+	        $("#wanted_list").click(function (){
+	          $("#belownav").load("your_wanted_list");
+	        });
+                
 
             }
 
@@ -114,13 +120,13 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="./index.html">BookHub</a>
+                <a class="navbar-brand" href="">BookHub</a>
             </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="#">books</a></li>
-                    <li><a href="#">wanted List</a></li>
+                    <li id="wanted_list"><a href="#">wanted List</a></li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Account <span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
@@ -132,16 +138,15 @@
                             <li class="divider"></li>
                             <li><a data-toggle="modal" href="#addbook">I have a book</a></li>
                             <li><a data-toggle="modal" href="#wantbook">I want a book</a></li>
-
-
                         </ul>
                     </li>
                 </ul>
                 <form class="navbar-form navbar-left" role="search" method="post" action="search/">
+                    {% csrf_token %}
                     <div class="form-group">
                         <input type="text" name="keyword" class="form-control" placeholder="Search Inventory">
                     </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button id="search_submit" type="submit" class="btn btn-default">Submit</button>
                 </form>
                 <ul class="nav navbar-nav navbar-right">
                     <li><a data-toggle="modal" href="#login">Login</a></li>
@@ -211,223 +216,223 @@
                         <p><a href="#">learn about trust at BookHub</a></p>
                     </div>
                 </div>
-            </div>
+            </div>      
         </div>
 
 
 
 
-        <div class="modal fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-
-                    <div class="modal-body">
-                        <form class="form-horizontal" method="POST" action="signup/">
-			   {% csrf_token %}
-                            <fieldset>
-
-                                <!-- Form Name -->
-                                <legend>Welcome to BookHub!</legend>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-signup-username">Username</label>
-                                    <div class="controls">
-                                        <input id="textinput-1" name="textinput-signup-username" type="text" placeholder="your username" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-signup-netid">NetID</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-signup-netid" type="text" placeholder="your netid" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-signup-major">Major</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-signup-major" type="text" placeholder="your major" class="input-xlarge">
-                                    </div>
-                                </div>
-
-
-
-                                <!-- Password input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="passwordinput-signup-0">Password</label>
-                                    <div class="controls">
-                                        <input id="passwordinput-0" name="passwordinput-signup-0" type="password" placeholder="your password" class="input-xlarge">
-                                    </div>
-                                </div>
-                                <!-- Password input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="passwordinput-signup-1">Password Confirmation</label>
-                                    <div class="controls">
-                                        <input id="passwordinput-1" name="passwordinput-signup-1" type="password" placeholder="confirm your password" class="input-xlarge">
-                                    </div>
-                                </div>
-                                <br />
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <input type="submit" class="btn btn-primary" value="Register" />
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-
-                    <div class="modal-body">
-                        <form class="form-horizontal" method="post" action="login/">
-			{% csrf_token %}
-                            <fieldset>
-
-                                <!-- Form Name -->
-                                <legend>Welcome to BookHub!</legend>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-login-username">Username</label>
-                                    <div class="controls">
-                                        <input id="textinput-1" name="textinput-login-username" type="text" placeholder="username" class="input-xlarge">
-                                    </div>
-                                </div>
-
-
-
-
-                                <!-- Password input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="passwordinput-login">Password</label>
-                                    <div class="controls">
-                                        <input id="passwordinput-0" name="passwordinput-login" type="password" placeholder="password" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <br />
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <input type="submit" class="btn btn-primary" value="Login" />
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="addbook" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-
-                    <div class="modal-body">
-                        <form class="form-horizontal" method="post">
-			{% csrf_token %}
-                            <fieldset>
-
-                                <!-- Form Name -->
-                                <legend>ADD A BOOK!</legend>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-addbook-title">Book Title</label>
-                                    <div class="controls">
-                                        <input id="textinput-1" name="textinput-addbook-title" type="text" placeholder="title" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-addbook-isbn">ISBN</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-addbook-isbn" type="text" placeholder="ISBN" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-addbook-category">Category</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-addbook-category" type="text" placeholder="category" class="input-xlarge">
-                                    </div>
-                                </div>
-
-
-
-
-                                <br />
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <input type="submit" class="btn btn-primary" value="ADD" />
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="wantbook" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-
-                    <div class="modal-body">
-                        <form class="form-horizontal" method="post">
-			  {% csrf_token %}
-                            <fieldset>
-
-                                <!-- Form Name -->
-                                <legend>I NEED THIS BOOK!</legend>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-wantbook-title">Book Title</label>
-                                    <div class="controls">
-                                        <input id="textinput-1" name="textinput-wantbook-title" type="text" placeholder="title" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-wantbook-isbn">ISBN</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-wantbook-isbn" type="text" placeholder="ISBN" class="input-xlarge">
-                                    </div>
-                                </div>
-
-                                <!-- Text input-->
-                                <div class="control-group">
-                                    <label class="control-label" for="textinput-wantbook-category">Category</label>
-                                    <div class="controls">
-                                        <input id="textinput-2" name="textinput-wantbook-category" type="text" placeholder="category" class="input-xlarge">
-                                    </div>
-                                </div>
-
-
-
-
-                                <br />
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <input type="submit" class="btn btn-primary" value="ADD" />
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
 
     </div>
+    <div class="modal fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post" action="signup/">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <!-- Form Name -->
+                            <legend>Welcome to BookHub!</legend>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-signup-username">Username</label>
+                                <div class="controls">
+                                    <input id="textinput-1" name="textinput-signup-username" type="text" placeholder="your username" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-signup-netid">NetID</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-signup-netid" type="text" placeholder="your netid" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-signup-major">Major</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-signup-major" type="text" placeholder="your major" class="input-xlarge">
+                                </div>
+                            </div>
+
+
+
+                            <!-- Password input-->
+                            <div class="control-group">
+                                <label class="control-label" for="passwordinput-signup-0">Password</label>
+                                <div class="controls">
+                                    <input id="passwordinput-0" name="passwordinput-signup-0" type="password" placeholder="your password" class="input-xlarge">
+                                </div>
+                            </div>
+                            <!-- Password input-->
+                            <div class="control-group">
+                                <label class="control-label" for="passwordinput-signup-1">Password Confirmation</label>
+                                <div class="controls">
+                                    <input id="passwordinput-1" name="passwordinput-signup-1" type="password" placeholder="confirm your password" class="input-xlarge">
+                                </div>
+                            </div>
+                            <br />
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="Register" />
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post" action="login/">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <!-- Form Name -->
+                            <legend>Welcome to BookHub!</legend>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-login-username">Username</label>
+                                <div class="controls">
+                                    <input id="textinput-1" name="textinput-login-username" type="text" placeholder="username" class="input-xlarge">
+                                </div>
+                            </div>
+
+
+
+
+                            <!-- Password input-->
+                            <div class="control-group">
+                                <label class="control-label" for="passwordinput-login">Password</label>
+                                <div class="controls">
+                                    <input id="passwordinput-0" name="passwordinput-login" type="password" placeholder="password" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <br />
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="Login" />
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addbook" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post" action="havebook/">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <!-- Form Name -->
+                            <legend>ADD A BOOK!</legend>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-addbook-title">Book Title</label>
+                                <div class="controls">
+                                    <input id="textinput-1" name="textinput-addbook-title" type="text" placeholder="title" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-addbook-isbn">ISBN</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-addbook-isbn" type="text" placeholder="ISBN" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-addbook-category">Category</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-addbook-category" type="text" placeholder="category" class="input-xlarge">
+                                </div>
+                            </div>
+
+
+
+
+                            <br />
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="ADD" />
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="wantbook" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post" action="needbook/">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <!-- Form Name -->
+                            <legend>I NEED THIS BOOK!</legend>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-wantbook-title">Book Title</label>
+                                <div class="controls">
+                                    <input id="textinput-1" name="textinput-wantbook-title" type="text" placeholder="title" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-wantbook-isbn">ISBN</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-wantbook-isbn" type="text" placeholder="ISBN" class="input-xlarge">
+                                </div>
+                            </div>
+
+                            <!-- Text input-->
+                            <div class="control-group">
+                                <label class="control-label" for="textinput-wantbook-category">Category</label>
+                                <div class="controls">
+                                    <input id="textinput-2" name="textinput-wantbook-category" type="text" placeholder="category" class="input-xlarge">
+                                </div>
+                            </div>
+
+
+
+
+                            <br />
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <input type="submit" class="btn btn-primary" value="ADD" />
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
