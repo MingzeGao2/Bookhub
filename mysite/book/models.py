@@ -9,7 +9,11 @@ class User(models.Model):
     major = models.CharField(max_length=200)
     password = models.CharField(max_length=200)
     netid = models.CharField(max_length=200)
-
+class Search(models.Model):
+    def __str__(self):
+        return self.user.__str__()+ " "+ self.entry
+    entry = models.CharField(max_length=200)
+    user = models.ForeignKey(User)
 class Book(models.Model):
     def __str__(self):
         return self.title 
@@ -18,7 +22,7 @@ class Book(models.Model):
     category = models.CharField(max_length=200)
     amount = models.IntegerField(default=0)
     def __unicode__(self):
-        return u'{c}/{l}/{p}'.format(c=self.title, l=self.category, p=self.amount)
+        return u'{c}/{l}/{p}/{i}'.format(c=self.title, l=self.category, p=self.amount, i=self.ISBN)
 class Need(models.Model):
     def __str__(self):
         return self.user.__str__() + ' '+self.intention+' '+ self.book.title

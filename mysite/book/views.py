@@ -1,11 +1,13 @@
 from django.shortcuts import render_to_response , render, redirect
 from django.http import HttpResponse
-from book.models import Need, Book, User, Course, Require, Registration
+from book.models import Need, Book, User, Course, Require, Registration, Search
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext, loader
 from django.db import connection
 from sets import Set
+import random
 userid = 1000000
+hotness_dic = {"CS":0, "MATH":0, "HIST":0, "CHEM":0}
 home = "http://127.0.0.1:8000/bookhub"
 def needbook (request):
     global userid
@@ -15,7 +17,7 @@ def needbook (request):
         category = request.POST.get("textinput-wantbook-category",' ')
     try:
         output = []
-        neededBood = Book.objects.get(ISBN = ISBN)
+        neededBood = Book.objects.get(ISBN__contains = ISBN)
         try:
             entry = Need.objects.get(book=neededBood, intention="need", user=userid)
         except ObjectDoesNotExist:
@@ -28,28 +30,30 @@ def needbook (request):
     else:
         return redirect("http://127.0.0.1:8000/bookhub")
     return redirect("http://127.0.0.1:8000/bookhub")
+
+
 def delete_from_need(request):
     global userid
     if request.method == 'POST':
         book_list = request.POST.getlist(u'delete')
         for b in book_list:
-            book = Book.objects.get(ISBN=b)
+            book = Book.objects.get(ISBN__contains=b)
             intention = Need.objects.get(book=book,intention="need",user=userid)
             intention.delete()
-            intention.save()
     return redirect(home)
 def delete_from_have(request):
     global userid
     if request.method == 'POST':
         book_list = request.POST.getlist(u'delete')
+        print book_list
         for b in book_list:
-            book = Book.objects.get(ISBN=b)
+            b = b[:-2]
+            book = Book.objects.filter(ISBN__contains=b)[0]
             intention = Need.objects.get(book=book,intention="have",user=userid)
             intention.delete()
             book.amount -=1
-            book.save()
-            intention.save()
     return redirect("http://127.0.0.1:8000/bookhub")
+
 def havebook (request):
     global userid
     if request.method == 'POST':
@@ -57,7 +61,7 @@ def havebook (request):
         title = request.POST.get("textinput-addbook-title",' ')
         category = request.POST.get("textinput-addbook-category",' ')
     try:
-        book = Book.objects.get(ISBN=ISBN)
+        book = Book.objects.get(ISBN__contains=ISBN)
         print book
         bookid = book.id
         cursor = connection.cursor()
@@ -78,6 +82,7 @@ def havebook (request):
     else:
         return redirect("http://127.0.0.1:8000/bookhub")        
     return redirect("http://127.0.0.1:8000/bookhub")
+
 def deletebook(request):
     if request.method == 'POST':
         ISBN = request.POST.get("isbn",' ')    
@@ -244,6 +249,7 @@ def recommended_to_you(request):
             if entry.user != the_user and entry.user == u  and entry.book not in book_list:
                 print entry.book
                 rec_books.append(entry.book)
+    rec_books = Set(rec_books)
     template = loader.get_template('book/recommended_to_you.html')
     context = RequestContext(request,{
         'book_list' : rec_books
@@ -317,21 +323,83 @@ def login(request):
     return redirect("http://127.0.0.1:8000/bookhub")
 
 def search(request):
+    global userid        
     if request.method == "POST":
-        entry = request.POST.get(" ",' ')
+        entry = request.POST.get("keyword",' ')
+        if entry == '':
+            return redirect(home)
+        print entry
+        book_list = []
+        user_list = []
+        is_title=0
+        if userid != 1000000:
+            Search.objects.create(entry=entry, user=userid)
+
+        for c in entry:
+            if ord(c) < 47 or ord(c) > 58:
+                is_title = 1
+        if not is_title:
+            book_list.append(Book.objects.get(ISBN__contains=entry))
+        else:
+            books = Book.objects.filter(title__contains=entry)
+            for b in books:
+                book_list.append(b)
+        for b in book_list:
+            find = 0
+            for n in Need.objects.all():
+                print n.book == b
+                if n.intention == "have" and n.book == b:
+                    user_list.append(n.user)
+                    find = 1
+                    break
+                else:
+                    continue
+            if not find:
+                user_list.append(" ")
+    book_user = zip(book_list, user_list)
+    print book_user
+    template = loader.get_template('book/search.html')
+    context = RequestContext(request,{
+        'keyword' : entry,
+        'book_user': book_user
+    })
+    return HttpResponse(template.render(context))
+
+def search_result(entry):
     book_list = []
-    is_title=0
+    is_title=0 
+    if entry == '':
+        return []
     for c in entry:
-        if ord(c) < 47 and ord(c) > 58:
+        if ord(c) < 47 or ord(c) > 58:
             is_title = 1
     if not is_title:
-        book_list.append(Book.objects.get(ISBN=entry))
+        book_list.append(Book.objects.get(ISBN__contains=entry))
     else:
         books = Book.objects.filter(title__contains=entry)
         for b in books:
             book_list.append(b)
-    
-    
-        
-        
+    return book_list
+
+def hotness(request):
+    global hotness_dic
+    searched_book = []
+    searched_entry = []
+    category_list = []
+    threadhold = 100
+    for entry in Search.objects.all():
+        searched_entry.append(entry.entry)
+    print searched_entry
+    for e in searched_entry:
+        searched_book.append(search_result(e))
+    print hotness_dic
+    for books in searched_book:
+        if len(books) > threadhold:
+            books = random.sample(books, threadhold)
+        for book in books:
+            category_list.append(book.category)
+            hotness_dic[book.category] = hotness_dic[book.category] + 1
+
+    print hotness_dic
+    print category_list
         

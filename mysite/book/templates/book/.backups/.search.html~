@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Search result</title>
+</head>
+<body>
+    {% if book_list %}
+    <h1>Results for {% keyword %}</h1>
+    <table style="width:100%">
+        {% for book in book_list %}
+        <tr>
+            <td>{{book.title}}</td>
+            <td>{{book.ISBN}}</td>
+            <td>{{book.owner}}</td>
+            <td>{{book.category}}</td>  
+            <td>{{book.amount}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>Did not find any books that match</p>
+    {% endif %}
+</body>
+</html>
