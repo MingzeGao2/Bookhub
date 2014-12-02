@@ -221,36 +221,57 @@ def enlargeDatabase(request):
     return HttpResponse("good")
 
 def user_rank():
+    global userid
     book_list = []
+    top_n = 5
     rank = {}
-    the_one = User.objects.get(netid="mgao16")
-    for entry in Need.objects.all():
-        if entry.user== the_one:
-            book_list.append(entry.book)
-    for u in User.objects.all():
-        rank[u] = 0
-        for entry in Need.objects.all():
-            print entry.user != the_one and entry.user == u and entry.book in book_list
-            if entry.user != the_one and entry.user == u  and entry.book in book_list:
-                rank[u] +=1
-
-    sorted_rank = sorted(rank, key=rank.get)    
-    return sorted_rank
+    the_one = userid
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM book_need')
+    all_need = cursor.fetchall()
+    for entry in all_need:
+        if entry[3] == userid.id:
+            book_list.append(entry[2])
+    cursor.execute('SELECT * FROM book_user')
+    all_user = cursor.fetchall()
+    for u in all_user:
+        rank[u[0]] = 0
+        cursor.execute('SELECT * FROM book_need')
+        all_need_2 = cursor.fetchall()
+        for entry in all_need_2:
+            if entry[3] != userid.id and entry[3] == u[0] and entry[2] in book_list:
+                rank[u[0]] += 1
+    sorted_rank = sorted(rank, key=rank.get)    ## get sorted user rank
+    top_user = sorted_rank[-top_n:]
+    rec_books_user_base = []
+    for u in top_user:
+            cursor.execute('SELECT * FROM book_need')
+            need_entry = cursor.fetchall()
+            for entry in need_entry:
+                if entry[3] != userid and entry[3] == u and entry[2] not in book_list:
+                    rec_books_user_base.append(entry[2])
+    ## now get the rec books based on similar user
+    
+    return rec_books_user_base
+    
+def search_rank():
+    global userid
+    search_entry = []
+    rec_books_search = []
+    cursor = connection.cursor()
+    print userid.id
+    q = 'SELECT entry FROM book_search WHERE user_id = ' + str(userid.id)
+    print q
+    cursor.execute(q)
+    search_entry = cursor.fetchall()
+    for e in search_entry:
+        rec_books_search.append(entry_search(e))
         
+    
+
 def recommended_to_you(request):
-    top_ten_user = (user_rank())[-5:]
-    book_list = []
-    rec_books = []
-    the_user = User.objects.get(netid="mgao16")
-    for entry in Need.objects.all():
-        if entry.user== the_user:
-            book_list.append(entry.book)
-    for u in top_ten_user:
-        for entry in Need.objects.all():
-            if entry.user != the_user and entry.user == u  and entry.book not in book_list:
-                print entry.book
-                rec_books.append(entry.book)
-    rec_books = Set(rec_books)
+    rec_from_user = user_rank()
+    search_rank()
     template = loader.get_template('book/recommended_to_you.html')
     context = RequestContext(request,{
         'book_list' : rec_books
