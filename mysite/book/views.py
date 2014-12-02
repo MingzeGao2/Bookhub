@@ -37,6 +37,7 @@ def delete_from_need(request):
     if request.method == 'POST':
         book_list = request.POST.getlist(u'delete')
         for b in book_list:
+            b = b[:-2]
             book = Book.objects.get(ISBN__contains=b)
             intention = Need.objects.get(book=book,intention="need",user=userid)
             intention.delete()
@@ -294,10 +295,16 @@ def signup(request):
     return HttpResponse(template.render(context))
 
 def index(request):
+    major_list_raw = hotness()
+    major_list = {}
+    for key, value in major_list_raw.items():
+        major_list[key] = "{0:.1f}".format(value*1000)
+    print major_list
     template = loader.get_template('book/index.html')
-    context = RequestContext(request)
+    context = RequestContext(request,{
+        'major_list' : major_list
+    })
     return HttpResponse(template.render(context))
-
 def login(request):
     global userid
     if request.method == "POST":
@@ -336,7 +343,7 @@ def search(request):
             Search.objects.create(entry=entry, user=userid)
 
         for c in entry:
-            if ord(c) < 47 or ord(c) > 58:
+           if ord(c) < 47 or ord(c) > 58:
                 is_title = 1
         if not is_title:
             book_list.append(Book.objects.get(ISBN__contains=entry))
@@ -381,8 +388,9 @@ def search_result(entry):
             book_list.append(b)
     return book_list
 
-def hotness(request):
+def hotness():
     global hotness_dic
+    hotness_dic = {"CS":0, "MATH":0, "HIST":0, "CHEM":0}
     searched_book = []
     searched_entry = []
     category_list = []
@@ -399,7 +407,24 @@ def hotness(request):
         for book in books:
             category_list.append(book.category)
             hotness_dic[book.category] = hotness_dic[book.category] + 1
-
+    major_list = calculate_hotness(hotness_dic)
     print hotness_dic
-    print category_list
-        
+    print major_list
+    return major_list
+
+def major_count(category_list, result):
+    for major in category_list:
+        if result.get(major) == None:
+            result[major] = 1
+        else:
+            result[major] += 1
+
+
+def calculate_hotness(result):
+    total = 0.0;
+    major_list = {}
+    for key, value in result.items():
+        total += value
+    for key, value in result.items():
+        major_list[key] = value/total;
+    return major_list
