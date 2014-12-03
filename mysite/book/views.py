@@ -69,7 +69,6 @@ def havebook (request):
         bookid = book.id
         print book.amount
         try:
-            print "oh no"
             q = 'SELECT * FROM book_need, book_user, book_book  WHERE book_user.id = ' + str(userid.id) + ' AND book_book.id = ' + str(bookid) + ' AND book_need.intention= "have"' + ' AND book_user.id = book_need.user_id AND book_book.id = book_need.book_id'
             print q
             cursor.execute(q)
@@ -458,7 +457,7 @@ def signup(request):
 
 def index(request):
     global userid
-    userid = User.objects.get(netid="mgao16")
+##    userid = User.objects.get(netid="mgao16")
     username = "Login"
     if userid != 1000000:
         username = userid.User_name
