@@ -58,6 +58,7 @@ def delete_from_have(request):
 
 def havebook (request):
     global userid
+    cursor = connection.cursor()
     if request.method == 'POST':
         ISBN = request.POST.get("textinput-addbook-isbn", ' ')
         title = request.POST.get("textinput-addbook-title",' ')
@@ -66,21 +67,33 @@ def havebook (request):
         book = Book.objects.get(ISBN__contains=ISBN)
         print book
         bookid = book.id
-        cursor = connection.cursor()
         cursor.execute('SELECT amount FROM book_book WHERE id = %s',[bookid])
         amount = cursor.fetchone()
         amount = amount[0] + 1
         cursor.execute('UPDATE book_book SET amount = %s WHERE id = %s',[amount,bookid])
         print book.amount
         try:
+            print "here"
+            print "there"
             Need.objects.get(intention="have", user = userid, book = book)
+            print "oh no"
+            q = 'SELECT * FROM book_need WHERE user_id = ' + str(userid.id) + ' AND book_id = ' + str(bookid)
+            print q
+            cursor.execute(q)
+            print cursor.fetchall()
         except:
-            Need.objects.create(intention= "have",user= userid,book = book)
+            q = 'INSERT INTO book_need(intention, book_id, user_id) VALUES("have", "%s", "%s" )' %(str(bookid), str(userid.id))
+            print q
+            cursor.execute(q)
         else:
             return redirect("http://127.0.0.1:8000/bookhub")
         return redirect("http://127.0.0.1:8000/bookhub")
     except ObjectDoesNotExist:
-        insertbook(ISBN, category, title, 1)
+        print "need to insert"
+        inserted_book = insertbook(ISBN, category, title, 1)
+        q = 'INSERT INTO book_need(intention, book_id, user_id) VALUES("have", "%s", "%s" )' %(str(inserted_book.id), str(userid.id))
+        print q
+        cursor.execute(q)
     else:
         return redirect("http://127.0.0.1:8000/bookhub")        
     return redirect("http://127.0.0.1:8000/bookhub")
@@ -112,6 +125,7 @@ def insertbook(ISBN, Category, Title, Amount):
     try:
         cursor = connection.cursor()
         cursor.execute('INSERT INTO book_book (ISBN, category, title, amount) VALUES(%s, %s, %s, %s)',[ISBN, Category, Title, Amount])
+        return Book.objects.get(ISBN__contains=ISBN)
     except :
         context = RequestContext(request,{
             'response' : "can't be added to books"
@@ -445,7 +459,7 @@ def signup(request):
 
 def index(request):
     global userid
-    ##userid = User.objects.get(netid="mgao16")
+    userid = User.objects.get(netid="mgao16")
     username = "Login"
     if userid != 1000000:
         username = userid.User_name
