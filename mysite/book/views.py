@@ -459,7 +459,7 @@ def signup(request):
 
 def index(request):
     global userid
-    userid = User.objects.get(netid="mgao16")
+##    userid = User.objects.get(netid="mgao16")
     username = "Login"
     if userid != 1000000:
         username = userid.User_name
