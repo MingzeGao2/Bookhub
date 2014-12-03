@@ -254,28 +254,155 @@ def user_rank():
     ## now get the rec books based on similar user
     
     return rec_books_user_base
+
+def get_search_entry(entry):
+    entry = entry.lower()
+    print entry
+    global category_list    
+    cat_list = category_list
+    cat_list = Set(cat_list)
+    c_list = []
+    for c in cat_list:
+        c = str(c)
+        c = c.lower()
+        c_list.append(c)
     
+    book_list = []
+    is_cat = False
+    is_title = False
+    is_ISBN = False
+    threadhold = 50
+    cursor = connection.cursor()
+    if entry == '': ## entry is empty
+        return []
+    if entry in c_list:
+        is_cat = True
+    for c in entry: ## check if entry is ISBN
+        if ord(c) < 47 or ord(c) > 58 and not is_cat:
+            is_title = True
+
+    if not is_title and  not is_cat:
+        is_ISBN = True
+    if is_ISBN:
+        print "is isbn"
+        q = 'SELECT * FROM book_book WHERE ISBN LIKE ' + "'" + '%' + entry + '%' + "'"
+
+        cursor.execute(q)
+        book = cursor.fetchone()
+        print book[2]
+        book_list.append(book[0])
+        return book_list
+    if is_title: ## entry is a title
+        print "is title"
+        q = 'SELECT * FROM book_book WHERE LOWER(title) LIKE ' + "'" + '%' + entry + '%' + "'"
+
+    if is_cat:
+        print "is cat"
+        q = 'SELECT * FROM book_book WHERE LOWER(category) LIKE ' + "'" + '%' + entry + '%' + "'"
+    print q
+    cursor.execute(q)
+    all_books = cursor.fetchall()
+    if len(all_books) > threadhold:
+        all_books = random.sample(all_books, threadhold)
+    for book in all_books:
+        print book[2]
+        book_list.append(book[0])
+    return book_list
+
 def search_rank():
     global userid
     search_entry = []
     rec_books_search = []
     cursor = connection.cursor()
-    print userid.id
-    q = 'SELECT entry FROM book_search WHERE user_id = ' + str(userid.id)
+    q = 'SELECT * FROM book_search WHERE user_id = ' + str(userid.id)
     print q
     cursor.execute(q)
     search_entry = cursor.fetchall()
+    print search_entry
     for e in search_entry:
-        rec_books_search.append(entry_search(e))
+        print e[1]
+        rec_books_search.append(get_search_entry(e[1]))
+    return rec_books_search
+
+def major_rank():
+    global userid
+    print userid.id
+    cursor = connection.cursor()
+    major_book_list = []
+    print "here"
+    q = 'SELECT major FROM book_user WHERE id = ' + str(userid.id)
+    cursor.execute(q)
+    major = cursor.fetchone()[0]
+    major_l = major.split(' ')
+    for m in major_l:
+        m = m.lower()
+        q = 'SELECT * FROM book_book WHERE LOWER(category) LIKE ' + "'" + '%' + m + '%' + "'" + 'AND LOWER(title) LIKE ' + "'" + '%' + m + '%' + "'"
+        cursor.execute(q)
+        books = cursor.fetchall()
+        for b in books:
+            print b[2]
+            major_book_list.append(b[0])
         
+    return major_book_list
+
     
 
 def recommended_to_you(request):
+    cursor = connection.cursor()
+    book_list = []
+    rec_from_major = major_rank()
     rec_from_user = user_rank()
-    search_rank()
+    rec_from_search = search_rank()# is a list of searched book from every entry
+    search_sub_len = 0
+    major_weight = 20.0
+    user_weight  = 40.0
+    search_weight =40.0
+    all_book_rank = {}
+    q = 'SELECT * FROM book_book'
+    cursor.execute(q)
+    a = cursor.fetchall()
+    for i in a:
+        all_book_rank[i[0]] = 0  ## initialize rank dic
+
+    for i in xrange(len(rec_from_search)):
+        if len(rec_from_search[i]) != 0:
+            search_sub_len +=1
+    ## now add user weight 
+    if len(rec_from_user) != 0:
+        each_user  = user_weight / len(rec_from_user)
+    else:
+        each_user = 0
+    print each_user
+    for book in rec_from_user:
+        all_book_rank[book] += each_user
+    ## now add major weight
+    if len(rec_from_major) != 0:
+        each_major = major_weight / len(rec_from_major)
+    else:
+        each_major = 0
+    for book in rec_from_major:
+        all_book_rank[book] += each_major
+    
+    ## now add search_weigth
+    if len(rec_from_search) != 0:
+        each_search = search_weight/ len(rec_from_search)
+    else:
+        each_search = 0
+    for books in rec_from_search:
+        if len(books) != 0:
+            each_book = each_search/ len(books)
+            for book in books:
+                all_book_rank[book] += each_book
+
+
+    sorted_all_book = sorted(all_book_rank, key=all_book_rank.get, reverse=True)
+    for book in sorted_all_book[:100]:
+        print all_book_rank[book]
+        book_list.append(Book.objects.get(id=book))
+    print book_list
     template = loader.get_template('book/recommended_to_you.html')
     context = RequestContext(request,{
-        'book_list' : rec_books
+        'book_list' : book_list
     })
     return HttpResponse(template.render(context))
     
@@ -317,6 +444,8 @@ def signup(request):
     return HttpResponse(template.render(context))
 
 def index(request):
+    global userid
+    userid = User.objects.get(netid="mgao16")
     major_list_raw = hotness()
     major_list = {}
     for key, value in major_list_raw.items():
@@ -397,15 +526,19 @@ def search(request):
 def search_result(entry):
     book_list = []
     is_title=0 
+    cursor = connection.cursor()
     if entry == '':
         return []
     for c in entry:
         if ord(c) < 47 or ord(c) > 58:
             is_title = 1
     if not is_title:
-        book_list.append(Book.objects.get(ISBN__contains=entry))
+        q = 'SELECT * FROM book_book WHERE ISBN LIKE ' + "'" + '%' + entry + '%' + "'"
+        cursor.execute(q)
+        books = cursor.fetchall()
+        for b in books:
+            book_list.append(b)
     else:
-        cursor = connection.cursor()
         s = "SELECT * FROM book_book WHERE title LIKE " +"'" + "%" + entry + "%" + "'" + " AND amount <> 0"
         cursor.execute(s)
         books = cursor.fetchall()
@@ -416,7 +549,7 @@ def search_result(entry):
     return book_list
 
 def hotness():
-    global hotness_dic
+    global hotness_dic, category_list
     for key, value in hotness_dic.items():
         hotness_dic[key] = 0
     category_list = []
@@ -438,7 +571,7 @@ def hotness():
         for book in books:
             category_list.append(book[3])
             major_count(category_list, hotness_dic)
-
+            
             #hotness_dic[book.category] = hotness_dic[book.category] + 1
     print hotness_dic
     major_list = calculate_hotness(hotness_dic)
