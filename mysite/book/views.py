@@ -67,24 +67,23 @@ def havebook (request):
         book = Book.objects.get(ISBN__contains=ISBN)
         print book
         bookid = book.id
-        cursor.execute('SELECT amount FROM book_book WHERE id = %s',[bookid])
-        amount = cursor.fetchone()
-        amount = amount[0] + 1
-        cursor.execute('UPDATE book_book SET amount = %s WHERE id = %s',[amount,bookid])
         print book.amount
         try:
-            print "here"
-            print "there"
-            Need.objects.get(intention="have", user = userid, book = book)
             print "oh no"
-            q = 'SELECT * FROM book_need WHERE user_id = ' + str(userid.id) + ' AND book_id = ' + str(bookid)
+            q = 'SELECT * FROM book_need, book_user, book_book  WHERE book_user.id = ' + str(userid.id) + ' AND book_book.id = ' + str(bookid) + ' AND book_need.intention= "have"' + ' AND book_user.id = book_need.user_id AND book_book.id = book_need.book_id'
             print q
             cursor.execute(q)
-            print cursor.fetchall()
-        except:
+            result =  cursor.fetchall()
+            if len(result) == 0:
+                raise Exception('ObjectDoesNotExist')
+        except Exception:
             q = 'INSERT INTO book_need(intention, book_id, user_id) VALUES("have", "%s", "%s" )' %(str(bookid), str(userid.id))
             print q
             cursor.execute(q)
+            cursor.execute('SELECT amount FROM book_book WHERE id = %s',[bookid])
+            amount = cursor.fetchone()
+            amount = amount[0] + 1
+            cursor.execute('UPDATE book_book SET amount = %s WHERE id = %s',[amount,bookid])
         else:
             return redirect("http://127.0.0.1:8000/bookhub")
         return redirect("http://127.0.0.1:8000/bookhub")
@@ -459,7 +458,7 @@ def signup(request):
 
 def index(request):
     global userid
-##    userid = User.objects.get(netid="mgao16")
+    userid = User.objects.get(netid="mgao16")
     username = "Login"
     if userid != 1000000:
         username = userid.User_name
