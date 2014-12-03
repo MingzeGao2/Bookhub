@@ -492,16 +492,59 @@ def search(request):
         is_title=0
         if userid != 1000000:
             Search.objects.create(entry=entry, user=userid)
+        ## check login
+        
 
-        for c in entry:
-           if ord(c) < 47 or ord(c) > 58:
-                is_title = 1
-        if not is_title:
-            book_list.append(Book.objects.get(ISBN__contains=entry))
-        else:
-            books = Book.objects.filter(title__contains=entry)
-            for b in books:
-                book_list.append(b)
+        entry = entry.lower()
+        print entry
+        global category_list    
+        cat_list = category_list
+        cat_list = Set(cat_list)
+        c_list = []
+        for c in cat_list:
+            c = str(c)
+            c = c.lower()
+            c_list.append(c)
+    
+        raw_book_list = []
+        is_cat = False
+        is_title = False
+        is_ISBN = False
+        cursor = connection.cursor()
+        if entry in c_list:
+            is_cat = True
+        for c in entry: ## check if entry is ISBN
+            if ord(c) < 47 or ord(c) > 58 and not is_cat:
+                is_title = True
+
+        if not is_title and  not is_cat:
+            is_ISBN = True
+        if is_ISBN:
+            print "is isbn"
+            q = 'SELECT * FROM book_book WHERE ISBN LIKE ' + "'" + '%' + entry + '%' + "'"
+            cursor.execute(q)
+            book = cursor.fetchone()
+            print book[2]
+            book_list.append(Book.objects.get(id=book[0]))
+
+        if is_title: ## entry is a title
+            print "is title"
+            q = 'SELECT * FROM book_book WHERE LOWER(title) LIKE ' + "'" + '%' + entry + '%' + "'"
+
+        if is_cat:
+            print "is cat"
+            q = 'SELECT * FROM book_book WHERE LOWER(category) LIKE ' + "'" + '%' + entry + '%' + "'"
+
+        cursor.execute(q)
+        all_books = cursor.fetchall()
+        for book in all_books:
+            print book[2]
+            book_list.append(Book.objects.get(id=book[0]))
+
+
+
+
+        ## this part is to find user
         for b in book_list:
             find = 0
             for n in Need.objects.all():
