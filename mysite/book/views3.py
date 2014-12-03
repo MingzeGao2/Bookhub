@@ -446,9 +446,6 @@ def signup(request):
 def index(request):
     global userid
     ##userid = User.objects.get(netid="mgao16")
-    username = "Login"
-    if userid != 1000000:
-        username = userid.User_name
     major_list_raw = hotness()
     major_list = {}
     for key, value in major_list_raw.items():
@@ -456,12 +453,11 @@ def index(request):
     print major_list
     template = loader.get_template('book/index.html')
     context = RequestContext(request,{
-        'major_list' : major_list,
-        'username' : username
+        'major_list' : major_list
     })
     return HttpResponse(template.render(context))
 def login(request):
-    global userid, home
+    global userid
     if request.method == "POST":
         username = request.POST.get("textinput-login-username",' ')
         password = request.POST.get("passwordinput-login",' ')
@@ -481,8 +477,7 @@ def login(request):
             else:
                 userid = user
                 print userid
-                return redirect(home)
-            
+                return redirect("http://127.0.0.1:8000/bookhub")
     return redirect("http://127.0.0.1:8000/bookhub")
 
 def search(request):
